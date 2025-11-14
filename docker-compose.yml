@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    container_name: delivery-api-local
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DB_HOST=mysql
+      - DB_DATABASE=${DB_DATABASE:-delivery}
+      - DB_USERNAME=${DB_USERNAME:-delivery}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - delivery-network
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.delivery-api-local.rule=Host(`delivery.local`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.delivery-api-local.entrypoints=web"
+      - "traefik.http.services.delivery-api-local.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik-network"
+
+  mysql:
+    image: mysql:8.0
+    container_name: delivery-mysql-local
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-delivery}
+      MYSQL_USER: ${DB_USERNAME:-delivery}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - delivery-network
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+
+  redis:
+    image: redis:7-alpine
+    container_name: delivery-redis-local
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - delivery-network
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+networks:
+  delivery-network:
+    driver: bridge
+  traefik-network:
+    external: true
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
