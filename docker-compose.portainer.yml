@@ -1,0 +1,78 @@
+version: '3.8'
+
+# Este arquivo pode ser usado como referência no Portainer
+# Em produção, você pode remover o serviço 'traefik' se já estiver rodando separadamente
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: delivery_nginx
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./public:/var/www/html/public:ro
+      - ./storage:/var/www/html/storage:ro
+    depends_on:
+      - app
+    networks:
+      - delivery_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.delivery.rule=Host(`delivery.rinaldi.dev.br`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.delivery.entrypoints=websecure"
+      - "traefik.http.routers.delivery.tls.certresolver=letsencrypt"
+      - "traefik.http.services.delivery.loadbalancer.server.port=80"
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - APP_ENV=production
+    container_name: delivery_app
+    volumes:
+      - .:/var/www/html
+      - ./storage:/var/www/html/storage
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=mysql
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - delivery_network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: delivery_mysql
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - delivery_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: delivery_redis
+    networks:
+      - delivery_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  delivery_network:
+    external: true
+    # Em produção, certifique-se de que esta rede existe ou será criada automaticamente
