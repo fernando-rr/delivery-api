@@ -22,7 +22,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./letsencrypt:/letsencrypt
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
   nginx:
@@ -35,7 +35,7 @@ services:
     depends_on:
       - app
     networks:
-      - delivery_network
+      - rinaldi
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.delivery.rule=Host(`${TRAEFIK_HOST:-delivery.local}`) && PathPrefix(`/api`)"
@@ -69,7 +69,7 @@ services:
       - mysql
       - redis
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
   mysql:
@@ -83,19 +83,19 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
   redis:
     image: redis:alpine
     container_name: delivery_redis
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
 volumes:
   mysql_data:
 
 networks:
-  delivery_network:
+  rinaldi:
     driver: bridge
