@@ -14,7 +14,7 @@ services:
     depends_on:
       - app
     networks:
-      - delivery_network
+      - rinaldi
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.delivery.rule=Host(`delivery.rinaldi.dev.br`) && PathPrefix(`/api`)"
@@ -45,7 +45,7 @@ services:
       - mysql
       - redis
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
   mysql:
@@ -59,20 +59,20 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
   redis:
     image: redis:alpine
     container_name: delivery_redis
     networks:
-      - delivery_network
+      - rinaldi
     restart: unless-stopped
 
 volumes:
   mysql_data:
 
 networks:
-  delivery_network:
+  rinaldi:
     external: true
     # Em produção, certifique-se de que esta rede existe ou será criada automaticamente
