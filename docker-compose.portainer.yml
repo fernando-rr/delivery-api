@@ -12,7 +12,7 @@ services:
       - ./public:/var/www/html/public:ro
       - ./storage:/var/www/html/storage:ro
     depends_on:
-      - app
+      - delivery_api
     networks:
       - rinaldi
     labels:
@@ -23,13 +23,13 @@ services:
       - "traefik.http.services.delivery.loadbalancer.server.port=80"
     restart: unless-stopped
 
-  app:
+  delivery_api:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         - APP_ENV=production
-    container_name: delivery_app
+    container_name: delivery_api
     volumes:
       - .:/var/www/html
       - ./storage:/var/www/html/storage
