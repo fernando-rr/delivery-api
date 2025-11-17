@@ -8,8 +8,8 @@ services:
     image: nginx:alpine
     container_name: delivery_nginx
     volumes:
-      - ./docker/nginx/default.portainer.conf:/etc/nginx/conf.d/default.conf
-      - .:/var/www/html:ro
+      - /root/projects/delivery_api/docker/nginx/default.portainer.conf:/etc/nginx/conf.d/default.conf
+      - /root/projects/delivery_api:/var/www/html
     depends_on:
       - delivery_api
     networks:
@@ -25,16 +25,16 @@ services:
       - "traefik.http.routers.delivery-http.service=delivery"
     restart: unless-stopped
 
-  delivery_api:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         - APP_ENV=production
-    image: delivery_api
+    image: app
     container_name: delivery_api
     volumes:
-      - .:/var/www/html
+      - /root/projects/delivery_api:/var/www/html
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
