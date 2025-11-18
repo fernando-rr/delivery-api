@@ -38,13 +38,28 @@ services:
       - rinaldi
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.delivery.rule=Host(`${TRAEFIK_HOST:-delivery.local}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.delivery.entrypoints=web"
+      # Rota para API
+      - "traefik.http.routers.delivery-api.rule=Host(`${TRAEFIK_HOST:-delivery.local}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.delivery-api.entrypoints=web"
+      - "traefik.http.routers.delivery-api.priority=100"
       - "traefik.http.services.delivery.loadbalancer.server.port=80"
-      - "traefik.http.routers.delivery-secure.rule=Host(`${TRAEFIK_HOST:-delivery.local}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.delivery-secure.entrypoints=websecure"
-      - "traefik.http.routers.delivery-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.delivery-secure.service=delivery"
+      # Rota segura para API
+      - "traefik.http.routers.delivery-api-secure.rule=Host(`${TRAEFIK_HOST:-delivery.local}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.delivery-api-secure.entrypoints=websecure"
+      - "traefik.http.routers.delivery-api-secure.priority=100"
+      - "traefik.http.routers.delivery-api-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.delivery-api-secure.service=delivery"
+      # Rota para todas as outras requisições (front-end)
+      - "traefik.http.routers.delivery-web.rule=Host(`${TRAEFIK_HOST:-delivery.local}`)"
+      - "traefik.http.routers.delivery-web.entrypoints=web"
+      - "traefik.http.routers.delivery-web.priority=10"
+      - "traefik.http.routers.delivery-web.service=delivery"
+      # Rota segura para front-end
+      - "traefik.http.routers.delivery-web-secure.rule=Host(`${TRAEFIK_HOST:-delivery.local}`)"
+      - "traefik.http.routers.delivery-web-secure.entrypoints=websecure"
+      - "traefik.http.routers.delivery-web-secure.priority=10"
+      - "traefik.http.routers.delivery-web-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.delivery-web-secure.service=delivery"
     restart: unless-stopped
 
   app:
