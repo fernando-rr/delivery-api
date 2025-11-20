@@ -1,0 +1,21 @@
+meta {
+  name: Create Restaurant
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{api_url}}/central/restaurants
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Restaurante Demo",
+    "slug": "restaurante-demo",
+    "contact_phone": "11999999999",
+    "domain": "demo.delivery.local",
+    "active": true
+  }
+}

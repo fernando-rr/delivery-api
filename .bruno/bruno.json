@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "name": "Delivery Platform API",
+  "type": "collection",
+  "ignore": [
+    ".git",
+    "node_modules",
+    ".env"
+  ]
+}
+
