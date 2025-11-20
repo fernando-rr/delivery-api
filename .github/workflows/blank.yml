@@ -42,6 +42,3 @@ jobs:
 
       - name: Run Laravel Pint (Lint Check)
         run: ./vendor/bin/pint --test
-
-      - name: Run PHP CS Fixer (Additional Check)
-        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --verbose

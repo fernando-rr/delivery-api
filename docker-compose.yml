@@ -27,7 +27,6 @@ services:
     container_name: delivery_api
     volumes:
       - ./:/var/www/html
-      - /var/www/html/vendor
     depends_on:
       - mysql
       - redis
@@ -74,6 +73,21 @@ services:
       - "6379:6379"
     networks:
       - delivery-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: delivery_pma
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD}
+    networks:
+      - delivery-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`phpmyadmin.delivery.local`)"
+      - "traefik.http.routers.phpmyadmin.entrypoints=web"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
 
 volumes:
   mysql_data:

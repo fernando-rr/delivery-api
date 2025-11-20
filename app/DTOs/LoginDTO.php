@@ -14,8 +14,3 @@ class LoginDTO extends BaseDTO
         ]);
     }
 }
-
-
-
-
-
