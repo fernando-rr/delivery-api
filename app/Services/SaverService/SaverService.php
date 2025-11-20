@@ -34,7 +34,6 @@ abstract class SaverService
     }
 
     /**
-     * @param callable $callback
      * @return mixed
      */
     protected function request(callable $callback)
@@ -78,7 +77,7 @@ abstract class SaverService
     protected function getErrorLogData(Throwable $exception): array
     {
         $logData = [
-            'source' => get_class($this)
+            'source' => get_class($this),
         ];
 
         if ($this->logWithPayload) {
@@ -111,5 +110,3 @@ abstract class SaverService
         return $this;
     }
 }
-
-

@@ -13,8 +13,8 @@ class AuthService
     /**
      * Realiza login e retorna token + dados do usuário
      *
-     * @param LoginDTO $dto
      * @return array ['token' => string, 'user' => UserDTO]
+     *
      * @throws ValidationException
      */
     public function login(LoginDTO $dto): array
@@ -49,9 +49,6 @@ class AuthService
 
     /**
      * Retorna dados do usuário autenticado
-     *
-     * @param User $user
-     * @return UserDTO
      */
     public function me(User $user): UserDTO
     {
@@ -61,7 +58,6 @@ class AuthService
     /**
      * Renova o token de autenticação
      *
-     * @param User $user
      * @return string Novo token
      */
     public function refresh(User $user): string
@@ -79,9 +75,6 @@ class AuthService
 
     /**
      * Realiza logout (revoga o token atual)
-     *
-     * @param User $user
-     * @return void
      */
     public function logout(User $user): void
     {
@@ -92,4 +85,3 @@ class AuthService
         }
     }
 }
-

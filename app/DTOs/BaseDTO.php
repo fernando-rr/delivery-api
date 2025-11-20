@@ -36,7 +36,7 @@ abstract class BaseDTO
     {
         /* @var BaseCast $castClass */
         $castClass = $this->getCastClassForAttribute($attributeName);
-        
+
         if ($castClass) {
             return $castClass::set($attributeValue);
         }
@@ -48,7 +48,7 @@ abstract class BaseDTO
     {
         /* @var BaseCast $castClass */
         $castClass = $this->getCastClassForAttribute($attributeName);
-        
+
         if ($castClass) {
             return $castClass::get($attributeValue);
         }
@@ -62,14 +62,14 @@ abstract class BaseDTO
     private function getCastClassForAttribute(string $attributeName): ?string
     {
         $attributeRule = $this->getAttributeRule($attributeName);
-        
+
         if (!$attributeRule) {
             return null;
         }
 
         // Extrai o tipo da regra (ex: 'nullable|date' -> 'date')
         $types = explode('|', $attributeRule);
-        
+
         foreach ($types as $type) {
             if (isset($this->casts[$type])) {
                 return $this->casts[$type];
@@ -80,7 +80,6 @@ abstract class BaseDTO
     }
 
     /**
-     * @param string $attributeName
      * @return string|null
      */
     private function getAttributeRule(string $attributeName)
@@ -144,9 +143,9 @@ abstract class BaseDTO
     {
         // 1. Aplica cast (se existir)
         $attributeValue = $this->castAttributeSet($attributeName, $attributeValue);
-        
+
         // 2. Aplica mutator customizado (se existir)
-        $mutatorMethodName = "set" . Str::studly($attributeName) . "Attribute";
+        $mutatorMethodName = 'set'.Str::studly($attributeName).'Attribute';
         if (method_exists($this, $mutatorMethodName)) {
             $attributeValue = $this->$mutatorMethodName($attributeValue);
         }
@@ -162,7 +161,7 @@ abstract class BaseDTO
                 }
 
                 return collect($attributeValue)
-                    ->map(fn($attributes) => new $DTOClass($attributes));
+                    ->map(fn ($attributes) => new $DTOClass($attributes));
             }
 
             return new $DTOClass(...$attributeValue);
@@ -175,8 +174,7 @@ abstract class BaseDTO
     {
         $this->attributes = collect($attributes)
             ->only($this->getFillableAttributes()->keys())
-            ->map(fn($attributeValue, $attributeName) => 
-                $this->transformAttributeValue($attributeName, $attributeValue)
+            ->map(fn ($attributeValue, $attributeName) => $this->transformAttributeValue($attributeName, $attributeValue)
             );
     }
 
@@ -189,24 +187,22 @@ abstract class BaseDTO
         if ($value instanceof self) {
             return $value->toArray();
         }
-        
+
         // Serializa Collections de DTOs
         if ($value instanceof Collection) {
-            return $value->map(fn($item) => 
-                $item instanceof self ? $item->toArray() : $item
+            return $value->map(fn ($item) => $item instanceof self ? $item->toArray() : $item
             )->toArray();
         }
-        
+
         return $value;
     }
 
     public function toArray(): array
     {
         return $this->getAttributes()
-            ->map(fn($attributeValue, $attributeName) => 
-                $this->serializeValue(
-                    $this->castAttributeGet($attributeName, $attributeValue)
-                )
+            ->map(fn ($attributeValue, $attributeName) => $this->serializeValue(
+                $this->castAttributeGet($attributeName, $attributeValue)
+            )
             )
             ->toArray();
     }

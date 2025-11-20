@@ -1,0 +1,539 @@
+openapi: 3.1.0
+info:
+  title: Delivery Platform API
+  version: 1.0.0
+  description: |
+    API SaaS Multi-tenant para plataforma de delivery.
+    
+    ## Autenticação
+    A maioria dos endpoints requer autenticação via Bearer Token (Sanctum).
+    
+    ## Multi-Tenant
+    A API opera em dois modos:
+    1. **Central**: `http://delivery.local/api/central` - Para gestão de assinaturas e cadastro de restaurantes.
+    2. **Tenant**: Identificado pelo domínio (Ex: `restaurante.delivery.local` ou `restaurante.local`).
+
+servers:
+  - url: http://delivery.local/api
+    description: Central Environment
+  - url: http://{tenant}.delivery.local/api
+    description: Tenant Environment (Production)
+    variables:
+      tenant:
+        default: demo
+        description: Slug do restaurante
+  - url: http://{tenant}.local/api
+    description: Tenant Environment (Local)
+    variables:
+      tenant:
+        default: demo
+        description: Slug do restaurante
+
+tags:
+  - name: Auth
+    description: Autenticação de usuários (Admin e Clientes)
+  - name: Central
+    description: Endpoints administrativos do SaaS (Gestão de restaurantes e Planos)
+  - name: Products
+    description: Gestão de catálogo de produtos (Tenant)
+  - name: Orders
+    description: Gestão de pedidos (Tenant)
+  - name: Customers
+    description: Gestão de clientes (Tenant)
+  - name: Menus
+    description: Organização de cardápios (Tenant)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Número da página para paginação
+      schema:
+        type: integer
+        default: 1
+    
+    LimitParam:
+      name: limit
+      in: query
+      description: Itens por página
+      schema:
+        type: integer
+        default: 15
+
+  schemas:
+    # --- Common ---
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The given data was invalid."
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+        meta:
+          type: object
+          properties:
+            current_page: {type: integer}
+            from: {type: integer}
+            last_page: {type: integer}
+            per_page: {type: integer}
+            to: {type: integer}
+            total: {type: integer}
+
+    # --- Auth ---
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@restaurant.com"
+        password:
+          type: string
+          format: password
+          example: "password"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "1|aF5s...7d9"
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: ['admin', 'manager', 'staff', 'customer']
+
+    # --- Central ---
+    Restaurant:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        slug: {type: string}
+        domain: {type: string, nullable: true}
+        active: {type: boolean}
+        created_at: {type: string, format: date-time}
+
+    RestaurantCreate:
+      type: object
+      required: [name, slug]
+      properties:
+        name: {type: string}
+        slug: {type: string}
+        domain: {type: string, nullable: true}
+
+    Plan:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        price: {type: number}
+        interval: {type: string, enum: [monthly, yearly]}
+        features: {type: object}
+
+    SubscriptionCreate:
+      type: object
+      required: [restaurant_id, plan_id]
+      properties:
+        restaurant_id: {type: integer}
+        plan_id: {type: integer}
+
+    # --- Tenant ---
+    Product:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        description: {type: string}
+        price: {type: number}
+        image_url: {type: string, nullable: true}
+        active: {type: boolean}
+        category_id: {type: integer, nullable: true}
+        created_at: {type: string, format: date-time}
+
+    ProductCreate:
+      type: object
+      required: [name, price]
+      properties:
+        name: {type: string}
+        description: {type: string}
+        price: {type: number}
+        image_url: {type: string}
+        active: {type: boolean}
+        category_id: {type: integer}
+
+    Customer:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        phone: {type: string}
+        email: {type: string}
+        whatsapp_id: {type: string, nullable: true}
+        address: 
+           type: object
+           nullable: true
+
+    CustomerCreate:
+      type: object
+      required: [name, phone]
+      properties:
+        name: {type: string}
+        phone: {type: string}
+        email: {type: string}
+        password: {type: string}
+        whatsapp_id: {type: string}
+
+    Order:
+      type: object
+      properties:
+        id: {type: integer}
+        status: 
+          type: string
+          enum: [pending, preparing, delivery, completed, cancelled]
+        total: {type: number}
+        customer: { $ref: '#/components/schemas/Customer' }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+        created_at: {type: string, format: date-time}
+
+    OrderItem:
+      type: object
+      properties:
+        id: {type: integer}
+        product_id: {type: integer}
+        product_name: {type: string}
+        quantity: {type: integer}
+        unit_price: {type: number}
+        notes: {type: string, nullable: true}
+
+    OrderCreate:
+      type: object
+      required: [items, customer]
+      properties:
+        customer:
+          type: object
+          description: "Objeto com ID (se usuário existente) ou dados para cadastro (se novo)"
+          properties:
+            id: {type: integer}
+            name: {type: string}
+            phone: {type: string}
+            email: {type: string}
+            password: {type: string}
+        items:
+          type: array
+          items:
+            type: object
+            required: [product_id, quantity]
+            properties:
+              product_id: {type: integer}
+              quantity: {type: integer}
+              notes: {type: string}
+
+    Menu:
+      type: object
+      properties:
+        id: {type: integer}
+        name: {type: string}
+        active: {type: boolean}
+        products:
+          type: array
+          items: { $ref: '#/components/schemas/Product' }
+
+paths:
+  # --- Auth ---
+  /auth/login:
+    post:
+      summary: Autenticação de usuário
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '422':
+          description: Erro de validação
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  # --- Central ---
+  /central/restaurants:
+    get:
+      summary: Listar restaurantes (Admin)
+      tags: [Central]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Lista de restaurantes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Restaurant' }
+    post:
+      summary: Criar novo restaurante e provisionar Tenant
+      tags: [Central]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RestaurantCreate' }
+      responses:
+        '201':
+          description: Restaurante criado e provisionado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Restaurant' }
+
+  /central/plans:
+    get:
+      summary: Listar planos disponíveis
+      tags: [Central]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Lista de planos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Plan' }
+
+  /central/subscriptions:
+    post:
+      summary: Criar assinatura para restaurante
+      tags: [Central]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscriptionCreate' }
+      responses:
+        '201':
+          description: Assinatura criada
+
+  # --- Tenant ---
+  /products:
+    get:
+      summary: Listar produtos do restaurante
+      tags: [Products]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Product' }
+    post:
+      summary: Criar produto (Admin/Manager)
+      tags: [Products]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductCreate' }
+      responses:
+        '201':
+          description: Produto criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+
+  /products/{id}:
+    put:
+      summary: Atualizar produto
+      tags: [Products]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductCreate' }
+      responses:
+        '200':
+          description: Produto atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+
+  /orders:
+    get:
+      summary: Listar pedidos (Admin/Manager)
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/Order' }
+    post:
+      summary: Criar pedido (Público ou Autenticado)
+      tags: [Orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderCreate' }
+      responses:
+        '201':
+          description: Pedido criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+
+  /orders/{id}:
+    get:
+      summary: Detalhes do pedido
+      tags: [Orders]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Detalhes do pedido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+
+  /orders/{id}/status:
+    patch:
+      summary: Atualizar status do pedido
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: 
+                  type: string
+                  enum: [pending, preparing, delivery, completed, cancelled]
+      responses:
+        '200':
+          description: Status atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+
+  /customers:
+    get:
+      summary: Listar clientes
+      tags: [Customers]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Customer' }
+    post:
+      summary: Cadastrar cliente
+      tags: [Customers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerCreate' }
+      responses:
+        '201':
+          description: Cliente criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Customer' }
+
+  /menus:
+    get:
+      summary: Listar cardápio ativo
+      tags: [Menus]
+      responses:
+        '200':
+          description: Cardápio com produtos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Menu' }
