@@ -39,8 +39,8 @@ class RestaurantCreatorServiceTest extends CentralTestCase
         $this->assertDatabaseHas('restaurants', [
             'name' => 'Test Restaurant',
             'slug' => 'test-restaurant',
-            'db_name' => 'tenant_'.$result->id,
+            'db_name' => 'tenant_' . $result->id,
         ]);
-        $this->assertEquals('tenant_'.$result->id, $result->db_name);
+        $this->assertEquals('tenant_' . $result->id, $result->db_name);
     }
 }

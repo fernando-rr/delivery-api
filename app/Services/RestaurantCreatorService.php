@@ -22,7 +22,7 @@ class RestaurantCreatorService extends SaverService
     protected function mapDataToSave(array $attributes): array
     {
         // Placeholder unique db_name to satisfy NOT NULL and UNIQUE constraint
-        $attributes['db_name'] = 'tenant_pending_'.uniqid();
+        $attributes['db_name'] = 'tenant_pending_' . uniqid();
 
         return $attributes;
     }

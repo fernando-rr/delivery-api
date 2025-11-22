@@ -36,16 +36,17 @@ class TenantsArtisanCommand extends Command
 
         // Ensure we are connected to central to get restaurant
         DB::reconnect('mysql');
-        
+
         $restaurant = Restaurant::find($tenantId);
 
         if (!$restaurant) {
             $this->error("Tenant with ID {$tenantId} not found.");
+
             return 1;
         }
 
         $dbName = 'tenant_' . $restaurant->id;
-        
+
         try {
             // Configure tenant database connection
             Config::set('database.connections.tenant.database', $dbName);
@@ -56,23 +57,23 @@ class TenantsArtisanCommand extends Command
 
             // We need to append --database=tenant if it's a migration command and not present
             if (str_contains($artisanCmd, 'migrate') && !str_contains($artisanCmd, '--database')) {
-                 $artisanCmd .= ' --database=tenant';
+                $artisanCmd .= ' --database=tenant';
             }
-             // We need to append path if it's a migration command and not present
+            // We need to append path if it's a migration command and not present
             if (str_contains($artisanCmd, 'migrate') && !str_contains($artisanCmd, '--path')) {
-                 $artisanCmd .= ' --path=database/migrations/tenant';
+                $artisanCmd .= ' --path=database/migrations/tenant';
             }
 
             Artisan::call($artisanCmd, [], $this->output);
-            
-            $this->info("Command completed successfully.");
+
+            $this->info('Command completed successfully.');
 
         } catch (\Exception $e) {
             $this->error("Failed to execute command for tenant {$restaurant->name} ({$dbName}): " . $e->getMessage());
+
             return 1;
         }
 
         return 0;
     }
 }
-

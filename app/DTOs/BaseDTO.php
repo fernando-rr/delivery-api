@@ -145,7 +145,7 @@ abstract class BaseDTO
         $attributeValue = $this->castAttributeSet($attributeName, $attributeValue);
 
         // 2. Aplica mutator customizado (se existir)
-        $mutatorMethodName = 'set'.Str::studly($attributeName).'Attribute';
+        $mutatorMethodName = 'set' . Str::studly($attributeName) . 'Attribute';
         if (method_exists($this, $mutatorMethodName)) {
             $attributeValue = $this->$mutatorMethodName($attributeValue);
         }
