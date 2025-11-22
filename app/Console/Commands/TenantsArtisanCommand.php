@@ -67,7 +67,6 @@ class TenantsArtisanCommand extends Command
             Artisan::call($artisanCmd, [], $this->output);
 
             $this->info('Command completed successfully.');
-
         } catch (\Exception $e) {
             $this->error("Failed to execute command for tenant {$restaurant->name} ({$dbName}): " . $e->getMessage());
 

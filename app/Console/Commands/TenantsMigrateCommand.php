@@ -15,7 +15,9 @@ class TenantsMigrateCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'tenants:migrate {--fresh : Wipe the database before running migrations} {--seed : Seed the database after migrations}';
+    protected $signature = 'tenants:migrate 
+                            {--fresh : Wipe the database before running migrations} 
+                            {--seed : Seed the database after migrations}';
 
     /**
      * The console command description.
@@ -73,7 +75,6 @@ class TenantsMigrateCommand extends Command
                 Artisan::call($command, $options);
 
                 $this->info(Artisan::output());
-
             } catch (\Exception $e) {
                 $this->error("Failed to migrate tenant {$restaurant->name} ({$dbName}): " . $e->getMessage());
             }

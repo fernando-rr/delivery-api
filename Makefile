@@ -35,9 +35,11 @@ test:
 
 lint:
 	docker compose exec app ./vendor/bin/pint --test
+	docker compose exec app ./vendor/bin/phpcs
 
 format:
-	docker compose exec app ./vendor/bin/pint
+	docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/pint
+	-docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/phpcbf
 
 # Helper for artisan commands
 # Usage: make artisan cmd="migrate:status"

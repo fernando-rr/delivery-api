@@ -1,9 +1,16 @@
 {
     "preset": "laravel",
     "rules": {
+        "class_attributes_separation": false,
         "not_operator_with_successor_space": false,
         "concat_space": {
             "spacing": "one"
+        },
+        "no_extra_blank_lines": {
+            "tokens": [
+                "extra",
+                "use_trait"
+            ]
         }
     }
 }

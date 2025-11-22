@@ -174,8 +174,10 @@ abstract class BaseDTO
     {
         $this->attributes = collect($attributes)
             ->only($this->getFillableAttributes()->keys())
-            ->map(fn ($attributeValue, $attributeName) => $this->transformAttributeValue($attributeName, $attributeValue)
-            );
+            ->map(fn ($attributeValue, $attributeName) => $this->transformAttributeValue(
+                $attributeName,
+                $attributeValue
+            ));
     }
 
     /**
@@ -190,8 +192,7 @@ abstract class BaseDTO
 
         // Serializa Collections de DTOs
         if ($value instanceof Collection) {
-            return $value->map(fn ($item) => $item instanceof self ? $item->toArray() : $item
-            )->toArray();
+            return $value->map(fn ($item) => $item instanceof self ? $item->toArray() : $item)->toArray();
         }
 
         return $value;
@@ -202,8 +203,7 @@ abstract class BaseDTO
         return $this->getAttributes()
             ->map(fn ($attributeValue, $attributeName) => $this->serializeValue(
                 $this->castAttributeGet($attributeName, $attributeValue)
-            )
-            )
+            ))
             ->toArray();
     }
 
