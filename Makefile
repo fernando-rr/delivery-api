@@ -1,4 +1,4 @@
-.PHONY: up down restart logs shell install setup test lint format artisan
+.PHONY: up down restart logs shell install setup test lint format artisan fix-perms
 
 # Docker containers
 up:
@@ -41,8 +41,12 @@ format:
 	docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/pint
 	-docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/phpcbf
 
+# Fix permissions
+fix-perms:
+	docker compose exec -u root app chown -R $$(id -u):$$(id -g) .
+
 # Helper for artisan commands
 # Usage: make artisan cmd="migrate:status"
 artisan:
 	docker compose exec app php artisan $(cmd)
-
+	@make fix-perms
