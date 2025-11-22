@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('restaurants', function (Blueprint $table) {
+        Schema::create('order_invoices', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('contact_phone');
-            $table->string('slug')->unique();
-            $table->string('domain')->nullable()->unique();
-            $table->string('db_name')->unique();
-            $table->boolean('active')->default(true);
+            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->string('invoice_number')->unique();
+            $table->string('url')->nullable();
+            $table->timestamp('issued_at');
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('restaurants');
+        Schema::dropIfExists('order_invoices');
     }
 };

@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('restaurants', function (Blueprint $table) {
+        Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('contact_phone');
-            $table->string('slug')->unique();
-            $table->string('domain')->nullable()->unique();
-            $table->string('db_name')->unique();
-            $table->boolean('active')->default(true);
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('type')->default('string');
+            $table->string('group')->default('general');
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('restaurants');
+        Schema::dropIfExists('settings');
     }
 };

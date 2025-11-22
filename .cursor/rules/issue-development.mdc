@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+
+Sempre que for solicitado para fazer uma issue:
+1. Verifique o id da issue
+2. Vá para a branch main, atualize ela
+3. Crie uma branch com nome "issue-ID" e inicie o desenvolvimento

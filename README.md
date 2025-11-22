@@ -47,8 +47,9 @@ Ao criar uma nova entidade (ex: `Product`):
 make up setup shell
 
 # Migrations
+make artisan cmd="tenants:migrate"                                      # All Tenants (Iterates over restaurants)
+make artisan cmd="tenants:artisan 1 'migrate:refresh'"                  # Single Tenant (Refresh specific tenant)
 make artisan cmd="migrate --path=database/migrations/central"           # Central
-make artisan cmd="migrate --database=tenant --path=database/migrations/tenant" # Tenant
 
 # Outros
 make artisan cmd="tinker"
