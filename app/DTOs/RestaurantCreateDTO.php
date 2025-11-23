@@ -8,7 +8,7 @@ class RestaurantCreateDTO extends BaseDTO
 {
     public static function getFillableAttributes(): Collection
     {
-        return collect([
+        return parent::getFillableAttributes()->merge([
             'name' => 'required|string|max:255',
             'contact_phone' => 'required|string|max:20',
             'slug' => 'required|string|max:255|unique:restaurants,slug',

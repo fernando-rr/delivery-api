@@ -1,6 +1,7 @@
 {
     "preset": "laravel",
     "rules": {
+        "single_line_empty_body": false,
         "class_attributes_separation": false,
         "not_operator_with_successor_space": false,
         "concat_space": {

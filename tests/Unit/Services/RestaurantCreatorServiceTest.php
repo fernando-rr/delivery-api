@@ -5,7 +5,7 @@ namespace Tests\Unit\Services;
 use App\DTOs\RestaurantCreateDTO;
 use App\DTOs\RestaurantDTO;
 use App\Services\RestaurantCreatorService;
-use Mockery\MockInterface;
+use App\Services\RestaurantUpdaterService;
 use Tests\CentralTestCase;
 
 class RestaurantCreatorServiceTest extends CentralTestCase
@@ -13,16 +13,22 @@ class RestaurantCreatorServiceTest extends CentralTestCase
     public function test_it_creates_restaurant_and_provisions_database(): void
     {
         // Arrange
-        // Partial mock to intercept only the database provisioning call
-        // allowing the rest of the service (Eloquent, DTOs) to work with the real (test) DB.
-        $service = $this->partialMock(RestaurantCreatorService::class, function (MockInterface $mock) {
-            $mock->shouldAllowMockingProtectedMethods();
-            $mock->shouldReceive('provisionTenantDatabase')
-                ->once()
-                ->withArgs(function ($dbName) {
-                    return str_starts_with($dbName, 'tenant_');
-                });
-        });
+        $updaterService = $this->app->make(RestaurantUpdaterService::class);
+
+        $service = \Mockery::mock(RestaurantCreatorService::class, [$updaterService])->makePartial();
+        $service->shouldAllowMockingProtectedMethods();
+
+        $service->shouldReceive('provisionTenantDatabase')
+            ->once()
+            ->withNoArgs()
+            ->andReturnSelf();
+
+        $service->shouldReceive('migrateTenantDatabase')
+            ->once()
+            ->withNoArgs()
+            ->andReturnSelf();
+
+        // Use the mocked service directly.
 
         $dto = new RestaurantCreateDTO([
             'name' => 'Test Restaurant',
