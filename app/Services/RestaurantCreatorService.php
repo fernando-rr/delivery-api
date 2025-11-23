@@ -5,12 +5,20 @@ namespace App\Services;
 use App\DTOs\BaseDTO;
 use App\DTOs\RestaurantCreateDTO;
 use App\DTOs\RestaurantDTO;
+use App\DTOs\RestaurantUpdateDTO;
 use App\Models\Restaurant;
 use App\Services\SaverService\SaverService;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
 class RestaurantCreatorService extends SaverService
 {
+    public function __construct(
+        protected RestaurantUpdaterService $updaterService
+    ) {
+    }
+
     public function create(RestaurantCreateDTO $dto): RestaurantDTO
     {
         /** @var RestaurantDTO $result */
@@ -36,22 +44,48 @@ class RestaurantCreatorService extends SaverService
 
     protected function afterSave()
     {
+        return $this
+            ->updateRestaurantDbName()
+            ->provisionTenantDatabase()
+            ->migrateTenantDatabase();
+    }
+
+    protected function updateRestaurantDbName(): static
+    {
         $id = $this->savedEntity->id;
         $dbName = "tenant_{$id}";
 
-        // Update db_name in database
-        Restaurant::where('id', $id)->update(['db_name' => $dbName]);
+        $dto = new RestaurantUpdateDTO([
+            'id' => $id,
+            'db_name' => $dbName,
+        ]);
 
-        // Update the DTO in memory so the return value is correct
-        $this->savedEntity->db_name = $dbName;
-
-        $this->provisionTenantDatabase($dbName);
+        $this->savedEntity = $this->updaterService->update($dto);
 
         return $this;
     }
 
-    protected function provisionTenantDatabase(string $dbName): void
+    protected function provisionTenantDatabase(): static
     {
+        $dbName = $this->savedEntity->db_name;
         DB::statement("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+        return $this;
+    }
+
+    protected function migrateTenantDatabase(): static
+    {
+        // Configura a conexão 'tenant' para apontar para o novo banco de dados
+        Config::set('database.connections.tenant.database', $this->savedEntity->db_name);
+        DB::purge('tenant');
+        DB::reconnect('tenant');
+
+        Artisan::call('migrate', [
+            '--database' => 'tenant',
+            '--path' => 'database/migrations/tenant',
+            '--force' => true,
+        ]);
+
+        return $this;
     }
 }

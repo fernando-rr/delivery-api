@@ -1,4 +1,4 @@
-.PHONY: up down restart logs shell install setup test lint format artisan fix-perms
+.PHONY: up down restart logs shell install setup test phpunit lint format artisan fix-perms
 
 # Docker containers
 up:
@@ -33,6 +33,9 @@ setup:
 test:
 	docker compose exec app php artisan test
 
+phpunit:
+	docker compose exec app ./vendor/bin/phpunit $(cmd)
+
 lint:
 	docker compose exec app ./vendor/bin/pint --test
 	docker compose exec app ./vendor/bin/phpcs
@@ -40,6 +43,7 @@ lint:
 format:
 	docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/pint
 	-docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/phpcbf
+	@make fix-perms
 
 # Fix permissions
 fix-perms:

@@ -22,7 +22,7 @@ Plataforma SaaS de delivery multi-tenant onde cada restaurante possui seu própr
 ### Dynamic Database Connection
 
 ```php
-// Middleware IdentifyTenant
+// Middleware IdentifyTenantMiddleware
 $tenant = Restaurant::where('slug', $slug)->first();
 config(['database.connections.tenant.database' => $tenant->db_name]);
 DB::purge('tenant');
@@ -52,8 +52,8 @@ Artisan::call('migrate', ['--database' => 'tenant', '--path' => 'database/migrat
 ## 🌐 URLs & Identificação
 
 - **Frontend:** http://delivery.local
-- **API:** http://delivery.local/api
-- **Tenant:** Header `X-Tenant-Id` ou Subdomínio (futuro)
+- **API Central:** http://delivery.local/api/central
+- **API Tenant:** http://delivery.local/api (Identificado via Host/Subdomínio)
 
 ## 📦 Padrões Arquiteturais
 
@@ -72,7 +72,9 @@ class ProductCreateDTO extends BaseDTO
 {
     public static function getFillableAttributes(): Collection
     {
-        return collect([
+        // Importante: Somente faça merge dos atributos padrão (id, created_at, updated_at)
+        // se a tabela da entidade realmente possuir esses campos.
+        return parent::getFillableAttributes()->merge([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
@@ -140,6 +142,10 @@ Apenas lógica de persistência e Eloquent:
 - `$hidden` para dados sensíveis
 - `casts()` para conversões
 - Métodos auxiliares simples
+
+**Importante:**
+- **NUNCA** faça chamadas diretas de Models (Eloquent) fora dos seus respectivos Services.
+- As chamadas devem ser centralizadas nos Services (Finder, Creator, Updater, Deleter) para garantir que, se houver necessidade de mudar uma chamada do Eloquent para outro serviço externo, a manutenção seja fácil e isolada.
 
 ### 5. Type Casting System
 
@@ -217,7 +223,7 @@ make up install shell logs
 2. **Central connection** apenas para metadados (restaurants, plans)
 3. **Cada tenant é isolado** - sem cross-tenant queries
 4. **Jobs devem saber qual tenant** (passar tenant_id ou db_name)
-5. **Middleware IdentifyTenant** obrigatório em todas rotas tenant
+5. **Middleware IdentifyTenantMiddleware** obrigatório em todas rotas tenant
 
 ## 📋 Convenções
 

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
-class IdentifyTenant
+class IdentifyTenantMiddleware
 {
     /**
      * Handle an incoming request.
