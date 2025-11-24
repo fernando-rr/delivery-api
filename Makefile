@@ -45,9 +45,13 @@ format:
 	-docker compose exec -u root -e TMPDIR=/var/www/html/storage/framework/cache app ./vendor/bin/phpcbf
 	@make fix-perms
 
-# Fix permissions
+# Fix permissions (local dev with docker compose)
 fix-perms:
 	docker compose exec -u root app chown -R $$(id -u):$$(id -g) .
+
+# Fix permissions (production with Docker Swarm)
+fix-perms-prod:
+	docker exec -u root $$(docker ps -q -f name=delivery_api_app) chown -R 1000:1000 /var/www/html
 
 # Helper for artisan commands
 # Usage: make artisan cmd="migrate:status"
