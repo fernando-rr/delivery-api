@@ -58,3 +58,6 @@ fix-perms-prod:
 artisan:
 	docker compose exec app php artisan $(cmd)
 	@make fix-perms
+
+artisan-prod:
+	docker exec -u root $$(docker ps -q -f name=delivery_api_app) php artisan $(cmd)
