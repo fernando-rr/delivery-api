@@ -12,6 +12,12 @@ use Symfony\Component\HttpFoundation\Response;
 class IdentifyTenantMiddleware
 {
     /**
+     * Suffix used to identify tenant subdomains.
+     * Example: "demo-delivery.domain.com" -> slug = "demo"
+     */
+    private const TENANT_SUFFIX = '-delivery';
+
+    /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
@@ -19,16 +25,11 @@ class IdentifyTenantMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
-
-        // Try to find by full domain or subdomain (slug)
-        // Assuming subdomain is the first part of the host if it's a subdomain of the main app
-        // Ideally we would have a configured central domain to strip out, but for now simplistic approach
-
-        $subdomain = explode('.', $host)[0];
+        $slug = $this->extractSlugFromHost($host);
 
         $restaurant = Restaurant::query()
             ->where('domain', $host)
-            ->orWhere('slug', $subdomain)
+            ->orWhere('slug', $slug)
             ->first();
 
         if (!$restaurant || !$restaurant->active) {
@@ -44,5 +45,25 @@ class IdentifyTenantMiddleware
         $request->merge(['tenant' => $restaurant]);
 
         return $next($request);
+    }
+
+    /**
+     * Extract tenant slug from host.
+     *
+     * Supports two formats:
+     * 1. "{slug}-delivery.domain.com" -> extracts "slug"
+     * 2. "{slug}.domain.com" -> extracts "slug" (fallback for custom domains)
+     */
+    private function extractSlugFromHost(string $host): ?string
+    {
+        $subdomain = explode('.', $host)[0];
+
+        // Check if subdomain ends with tenant suffix (e.g., "demo-delivery")
+        if (str_ends_with($subdomain, self::TENANT_SUFFIX)) {
+            return substr($subdomain, 0, -strlen(self::TENANT_SUFFIX));
+        }
+
+        // Fallback: use subdomain as-is (for custom domains like "pizzaria.com")
+        return $subdomain;
     }
 }

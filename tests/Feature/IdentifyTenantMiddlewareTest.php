@@ -51,19 +51,43 @@ class IdentifyTenantMiddlewareTest extends TestCase
             ]);
     }
 
-    public function test_it_identifies_tenant_by_subdomain()
+    public function test_it_identifies_tenant_by_subdomain_with_delivery_suffix()
     {
         $restaurant = Restaurant::create([
             'name' => 'Burger Joint',
-            'slug' => 'burger-joint',
+            'slug' => 'burger',
             'domain' => 'burger.com',
             'db_name' => 'tenant_2',
             'active' => true,
             'contact_phone' => '987654321',
         ]);
 
-        // Simular subdomain no Host header
-        $response = $this->getJson('http://burger-joint.delivery.local/api');
+        // Simular subdomain com sufixo -delivery (ex: burger-delivery.meudominio.dev.br)
+        $response = $this->getJson('http://burger-delivery.meudominio.dev.br/api');
+
+        if ($response->status() !== 200) {
+            $this->fail(
+                'Expected status 200 but received ' . $response->status() . '. Content: ' . $response->getContent()
+            );
+        }
+
+        $response->assertStatus(200)
+            ->assertJsonPath('tenant.id', $restaurant->id);
+    }
+
+    public function test_it_identifies_tenant_by_simple_subdomain()
+    {
+        $restaurant = Restaurant::create([
+            'name' => 'Sushi Place',
+            'slug' => 'sushi',
+            'domain' => 'sushi.com',
+            'db_name' => 'tenant_3',
+            'active' => true,
+            'contact_phone' => '111222333',
+        ]);
+
+        // Simular subdomain simples (fallback para domínios customizados)
+        $response = $this->getJson('http://sushi.meudominio.dev.br/api');
 
         if ($response->status() !== 200) {
             $this->fail(

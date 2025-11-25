@@ -51,9 +51,21 @@ Artisan::call('migrate', ['--database' => 'tenant', '--path' => 'database/migrat
 
 ## 🌐 URLs & Identificação
 
-- **Frontend:** http://delivery.local
-- **API Central:** http://delivery.local/api/central
-- **API Tenant:** http://delivery.local/api (Identificado via Host/Subdomínio)
+- **Frontend:** http://delivery.meudominio.dev.br
+- **API Central:** http://delivery.meudominio.dev.br/api/central
+- **API Tenant:** http://{slug}-delivery.meudominio.dev.br/api
+
+### Padrão de Subdomínio para Tenants
+
+O middleware `IdentifyTenantMiddleware` identifica o tenant pelo padrão `{slug}-delivery`:
+
+| URL | Slug Extraído |
+|-----|---------------|
+| `demo-delivery.meudominio.dev.br` | `demo` |
+| `pizzaria-delivery.meudominio.dev.br` | `pizzaria` |
+| `custom.com` (domínio próprio) | busca por `domain` |
+
+**Vantagem:** Wildcard SSL gratuito do Cloudflare funciona com subdomínios de primeiro nível (`*.meudominio.dev.br`).
 
 ## 📦 Padrões Arquiteturais
 
