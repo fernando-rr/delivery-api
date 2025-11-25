@@ -1,8 +1,16 @@
 version: '3.8'
 
+# Variáveis de ambiente necessárias (.env):
+# APP_HOST=delivery.local
+# APP_HOST_REGEX=delivery\.local
+#
+# Padrão de URLs:
+# - Principal: delivery.local/api
+# - Tenant: {slug}-delivery.local/api (ex: pizzaria-delivery.local/api)
+
 services:
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.4
     container_name: delivery_traefik
     command:
       - "--api.insecure=true"
@@ -10,7 +18,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
     ports:
-      - "80:80"     # Porta HTTP padrão (delivery.local)
+      - "80:80"     # Porta HTTP padrão
       - "8080:8080" # Dashboard do Traefik (localhost:8080)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -47,7 +55,9 @@ services:
       - delivery-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=(Host(`delivery.local`) || HostRegexp(`{subdomain:[a-z0-9-]+}.delivery.local`)) && PathPrefix(`/api`)"
+      # Traefik v3: usa regex pura (sem named groups)
+      # $$ escapa o $ no docker-compose
+      - "traefik.http.routers.backend.rule=(Host(`${APP_HOST}`) || HostRegexp(`^[a-z0-9-]+-${APP_HOST_REGEX}$$`)) && PathPrefix(`/api`)"
       - "traefik.http.routers.backend.entrypoints=web"
       - "traefik.http.services.backend.loadbalancer.server.port=80"
 

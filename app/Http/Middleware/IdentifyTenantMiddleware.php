@@ -56,7 +56,7 @@ class IdentifyTenantMiddleware
      */
     private function extractSlugFromHost(string $host): ?string
     {
-        $subdomain = explode('.', $host)[0];
+        $subdomain = explode('-delivery', $host)[0];
 
         // Check if subdomain ends with tenant suffix (e.g., "demo-delivery")
         if (str_ends_with($subdomain, self::TENANT_SUFFIX)) {
